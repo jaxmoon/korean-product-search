@@ -8,38 +8,38 @@ help: ## Show this help message
 
 up: ## Start all services (Elasticsearch + Kibana)
 	@echo "🚀 Starting Elasticsearch and Kibana..."
-	docker-compose up -d
+	docker compose -f docker/docker-compose.yml up -d
 	@echo "✅ Services started!"
 	@echo "📊 Elasticsearch: http://localhost:9200"
 	@echo "📈 Kibana: http://localhost:5601"
 
 down: ## Stop all services
 	@echo "🛑 Stopping all services..."
-	docker-compose down
+	docker compose -f docker/docker-compose.yml down
 	@echo "✅ Services stopped!"
 
 logs: ## Show logs from all services
-	docker-compose logs -f
+	docker compose -f docker/docker-compose.yml logs -f
 
 logs-es: ## Show Elasticsearch logs only
-	docker-compose logs -f elasticsearch
+	docker compose -f docker/docker-compose.yml logs -f elasticsearch
 
 logs-kibana: ## Show Kibana logs only
-	docker-compose logs -f kibana
+	docker compose -f docker/docker-compose.yml logs -f kibana
 
 restart: ## Restart all services
 	@echo "🔄 Restarting all services..."
-	docker-compose restart
+	docker compose -f docker/docker-compose.yml restart
 	@echo "✅ Services restarted!"
 
 restart-es: ## Restart Elasticsearch only
 	@echo "🔄 Restarting Elasticsearch..."
-	docker-compose restart elasticsearch
+	docker compose -f docker/docker-compose.yml restart elasticsearch
 	@echo "✅ Elasticsearch restarted!"
 
 clean: ## Remove all containers, volumes, and data
 	@echo "🗑️  Cleaning up all data..."
-	docker-compose down -v
+	docker compose -f docker/docker-compose.yml down -v
 	@echo "✅ Cleanup complete!"
 
 es-status: ## Check Elasticsearch cluster health
