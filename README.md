@@ -67,10 +67,11 @@ npm run start:dev
 
 ```bash
 # 1000개 샘플 상품 데이터 생성
+cd backend
 npm run seed
 
-# 또는 API 호출
-curl -X POST http://localhost:3000/products/seed
+# 또는 스크립트 직접 실행
+ts-node ../scripts/seed-data.ts
 ```
 
 ## 📖 API 문서
@@ -165,11 +166,13 @@ korean-product-search/
 │   │   ├── products/          # 상품 모듈
 │   │   ├── elasticsearch/     # Elasticsearch 모듈
 │   │   └── common/            # 공통 모듈
-│   └── scripts/
-│       └── seed-data.ts       # 샘플 데이터 생성
-├── elasticsearch/
-│   └── config/
-│       └── index-settings.json # 인덱스 설정
+│   └── package.json
+├── scripts/
+│   └── seed-data.ts           # 샘플 데이터 생성 (1000개)
+├── docker/
+│   └── elasticsearch/
+│       └── config/
+│           └── index-settings.json
 ├── docker-compose.yml
 ├── Makefile
 └── README.md
