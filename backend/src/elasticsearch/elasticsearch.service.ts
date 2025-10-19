@@ -70,14 +70,10 @@ export class ElasticsearchService implements OnModuleInit {
 
   async createProductsIndex(indexName: string): Promise<void> {
     try {
-      // index-settings.json 파일 읽기
-      const settingsPath = path.join(
-        process.cwd(),
-        '..',
-        'docker',
-        'elasticsearch',
-        'config',
-        'index-settings.json',
+      // index-settings.json 파일 읽기 (환경 변수 또는 기본 경로 사용)
+      const settingsPath = this.configService.get<string>(
+        'ELASTICSEARCH_INDEX_SETTINGS_PATH',
+        path.join(process.cwd(), '..', 'docker', 'elasticsearch', 'config', 'index-settings.json'),
       );
 
       this.logger.log(`Reading index settings from: ${settingsPath}`);
@@ -119,10 +115,10 @@ export class ElasticsearchService implements OnModuleInit {
     }
   }
 
-  async getIndexMapping(indexName: string): Promise<Record<string, unknown>> {
+  async getIndexMapping(indexName: string) {
     try {
       const mapping = await this.client.indices.getMapping({ index: indexName });
-      return mapping as Record<string, unknown>;
+      return mapping;
     } catch (error) {
       const err = error as Error;
       this.logger.error(
@@ -160,10 +156,10 @@ export class ElasticsearchService implements OnModuleInit {
     }
   }
 
-  async getClusterHealth(): Promise<Record<string, unknown>> {
+  async getClusterHealth() {
     try {
       const health = await this.client.cluster.health();
-      return health as Record<string, unknown>;
+      return health;
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Failed to get cluster health: ${err.message}`, err.stack);
@@ -171,10 +167,10 @@ export class ElasticsearchService implements OnModuleInit {
     }
   }
 
-  async getIndexStats(indexName: string): Promise<Record<string, unknown>> {
+  async getIndexStats(indexName: string) {
     try {
       const stats = await this.client.indices.stats({ index: indexName });
-      return stats as Record<string, unknown>;
+      return stats;
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Failed to get stats for index '${indexName}': ${err.message}`, err.stack);
