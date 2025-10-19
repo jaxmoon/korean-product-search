@@ -76,45 +76,60 @@ ts-node ../scripts/seed-data.ts
 
 ## 📖 API 문서
 
-### 상품 검색
+### Swagger UI (인터랙티브 문서)
+
+애플리케이션 실행 후 브라우저에서 접속:
+```
+http://localhost:4000/api
+```
+
+### 상세 API 가이드
+
+[API 사용 가이드 문서](docs/api.md)를 참고하세요. 모든 엔드포인트의 상세 설명, 요청/응답 예제, cURL 명령어가 포함되어 있습니다.
+
+### 빠른 API 예제
+
+#### 상품 검색
 
 ```bash
 # 기본 검색
-GET /products/search?q=노트북
+curl "http://localhost:4000/products/search?q=노트북"
 
 # 필터 적용
-GET /products/search?q=스마트폰&category=전자제품&minPrice=300000&maxPrice=1000000
+curl "http://localhost:4000/products/search?q=스마트폰&category=전자제품&minPrice=300000&maxPrice=1000000"
 
 # 정렬
-GET /products/search?q=이어폰&sort=price:asc
+curl "http://localhost:4000/products/search?q=이어폰&sort=price:asc"
 
 # 페이지네이션
-GET /products/search?q=책&page=1&limit=20
+curl "http://localhost:4000/products/search?q=책&page=1&pageSize=20"
 ```
 
-### 상품 CRUD
+#### 상품 CRUD
 
 ```bash
 # 상품 생성
-POST /products
-Content-Type: application/json
-
-{
-  "name": "갤럭시 S24 울트라",
-  "description": "최신 플래그십 스마트폰",
-  "category": "전자제품",
-  "price": 1500000,
-  "tags": ["스마트폰", "삼성", "5G"]
-}
+curl -X POST http://localhost:4000/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "갤럭시 S24 울트라",
+    "description": "최신 플래그십 스마트폰",
+    "category": "전자제품",
+    "price": 1500000,
+    "stock": 50,
+    "tags": ["스마트폰", "삼성", "5G"]
+  }'
 
 # 상품 조회
-GET /products/:id
+curl "http://localhost:4000/products/{id}"
 
 # 상품 수정
-PUT /products/:id
+curl -X PUT "http://localhost:4000/products/{id}" \
+  -H "Content-Type: application/json" \
+  -d '{"price": 1400000}'
 
 # 상품 삭제
-DELETE /products/:id
+curl -X DELETE "http://localhost:4000/products/{id}"
 ```
 
 ## 🔍 검색 예제
