@@ -1,0 +1,163 @@
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "max_result_window": 10000
+    },
+    "analysis": {
+      "tokenizer": {
+        "nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed",
+          "discard_punctuation": true,
+          "user_dictionary_rules": []
+        }
+      },
+      "filter": {
+        "nori_part_of_speech": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "E",
+            "IC",
+            "J",
+            "MAG",
+            "MAJ",
+            "MM",
+            "SP",
+            "SSC",
+            "SSO",
+            "SC",
+            "SE",
+            "XPN",
+            "XSA",
+            "XSN",
+            "XSV",
+            "UNA",
+            "NA",
+            "VSV"
+          ]
+        },
+        "korean_stop": {
+          "type": "stop",
+          "stopwords": [
+            "이",
+            "그",
+            "저",
+            "것",
+            "수",
+            "등",
+            "및",
+            "을",
+            "를",
+            "에",
+            "의",
+            "가",
+            "이",
+            "은",
+            "는",
+            "하",
+            "았",
+            "있",
+            "되",
+            "수",
+            "보",
+            "주",
+            "등",
+            "한"
+          ]
+        },
+        "synonym": {
+          "type": "synonym",
+          "synonyms": [
+            "노트북, 랩탑, laptop",
+            "휴대폰, 핸드폰, 스마트폰, 모바일",
+            "티셔츠, 반팔, 티",
+            "청바지, 데님, 진",
+            "운동화, 스니커즈, 신발",
+            "가방, 백, 백팩, 배낭"
+          ]
+        }
+      },
+      "analyzer": {
+        "nori_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": [
+            "nori_part_of_speech",
+            "lowercase",
+            "korean_stop",
+            "synonym"
+          ]
+        },
+        "nori_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": [
+            "nori_part_of_speech",
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "search_analyzer": "nori_search_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "ngram": {
+            "type": "text",
+            "analyzer": "standard"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "search_analyzer": "nori_search_analyzer"
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "price": {
+        "type": "long"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "createdAt": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "updatedAt": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "stock": {
+        "type": "integer"
+      },
+      "brand": {
+        "type": "keyword"
+      },
+      "rating": {
+        "type": "float"
+      },
+      "reviewCount": {
+        "type": "integer"
+      },
+      "images": {
+        "type": "keyword"
+      },
+      "isActive": {
+        "type": "boolean"
+      }
+    }
+  }
+}
