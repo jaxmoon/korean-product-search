@@ -189,22 +189,56 @@ export class ProductsService {
       const must: any[] = [];
       const filter: any[] = [];
 
-      // 텍스트 검색 (상품명, 설명)
+      // 텍스트 검색 (상품명, 설명, 브랜드)
       if (q) {
-        must.push({
-          multi_match: {
-            query: q,
-            fields: ['name^2', 'description'],
-            type: 'best_fields',
-            operator: 'or',
-            fuzziness: 'AUTO',
-          },
-        });
+        const terms = q.trim().split(/\s+/);
+
+        if (terms.length === 1) {
+          // 단일 단어: 정확한 매칭과 형태소 매칭만 사용
+          must.push({
+            bool: {
+              should: [
+                // 정확한 매칭 (높은 스코어)
+                {
+                  multi_match: {
+                    query: q,
+                    fields: ['name^5', 'brand^3', 'description'],
+                    type: 'phrase',
+                  },
+                },
+                // 형태소 매칭 (중간 스코어)
+                {
+                  multi_match: {
+                    query: q,
+                    fields: ['name^3', 'brand^2', 'description'],
+                    type: 'best_fields',
+                    operator: 'and',
+                  },
+                },
+              ],
+              minimum_should_match: 1,
+            },
+          });
+        } else {
+          // 복수 단어: AND 조건 적용 (Fuzzy 없이)
+          must.push({
+            bool: {
+              must: terms.map((term) => ({
+                multi_match: {
+                  query: term,
+                  fields: ['name^3', 'brand^2', 'description'],
+                  type: 'best_fields',
+                  operator: 'and',
+                },
+              })),
+            },
+          });
+        }
       }
 
       // 카테고리 필터
       if (category) {
-        filter.push({ term: { 'category.keyword': category } });
+        filter.push({ term: { category } });
       }
 
       // 가격 범위 필터
@@ -218,7 +252,7 @@ export class ProductsService {
       // 태그 필터
       if (tags && tags.length > 0) {
         filter.push({
-          terms: { 'tags.keyword': tags },
+          terms: { tags },
         });
       }
 
@@ -247,6 +281,7 @@ export class ProductsService {
           highlight: {
             fields: {
               name: {},
+              brand: {},
               description: {},
             },
             pre_tags: ['<em>'],
@@ -284,25 +319,140 @@ export class ProductsService {
 
   async seed(count = 1000): Promise<{ message: string; count: number }> {
     try {
-      this.logger.log(`Starting seed process for ${count} products...`);
+      this.logger.log(`Starting seed process for ${count} realistic products...`);
 
-      const categories = ['전자제품', '패션', '식품', '생활용품', '도서'];
-      const brands = ['삼성', 'LG', '애플', '나이키', '아디다스', '스타벅스', '동원', '코카콜라'];
+      const productData: Record<string, Record<string, string[]>> = {
+        전자제품: {
+          삼성: [
+            '갤럭시 S24 울트라',
+            '갤럭시 Z 플립5',
+            '갤럭시 워치6',
+            'QLED 8K TV',
+            '비스포크 냉장고',
+            '그랑데 AI 세탁기',
+          ],
+          LG: [
+            'LG 그램 노트북',
+            'OLED TV',
+            '트롬 세탁기',
+            'LG 울트라 모니터',
+            '오브제 냉장고',
+            '퓨리케어 공기청정기',
+          ],
+          애플: [
+            '아이폰 15 Pro',
+            '맥북 에어 M3',
+            '아이패드 Pro',
+            '애플워치 Series 9',
+            '에어팟 Pro',
+            'iMac 24인치',
+          ],
+        },
+        패션: {
+          나이키: [
+            '에어맥스 270',
+            '조던 1 레트로',
+            '에어포스 1',
+            '리액트 인피니티',
+            '덩크 로우',
+            '줌X 바포플라이',
+          ],
+          아디다스: [
+            '울트라부스트 22',
+            '스탠스미스',
+            '슈퍼스타',
+            'NMD R1',
+            'YEEZY 부스트',
+            '포럼 로우',
+          ],
+          '': ['후드 티셔츠', '맨투맨', '트레이닝 팬츠', '레깅스', '바람막이', '트랙 자켓'],
+        },
+        식품: {
+          스타벅스: [
+            '아메리카노 원두',
+            '카페라떼 원두',
+            '파이크 플레이스 로스트',
+            '시그니처 초콜릿',
+            '머그컵 세트',
+            '텀블러',
+          ],
+          동원: [
+            '참치캔 85g 10입',
+            '리챔',
+            '양반김',
+            '동원 김치찌개',
+            '동원 덴마크 정통 치즈',
+            '스위트콘',
+          ],
+          코카콜라: [
+            '코카콜라 제로 1.5L',
+            '코카콜라 클래식',
+            '스프라이트',
+            '환타 오렌지',
+            '파워에이드',
+            '미닛메이드',
+          ],
+        },
+        생활용품: {
+          '': [
+            '세탁세제',
+            '섬유유연제',
+            '주방세제',
+            '화장지',
+            '물티슈',
+            '샴푸',
+            '바디워시',
+            '치약',
+            '칫솔',
+            '비누',
+          ],
+        },
+        도서: {
+          '': [
+            '프로그래밍 입문서',
+            '한국 역사',
+            '세계사',
+            '철학 개론',
+            '자기계발서',
+            '경영학',
+            '심리학',
+            '과학',
+            '수학',
+            '문학',
+          ],
+        },
+      };
 
       const products: Partial<Product>[] = [];
 
       for (let i = 0; i < count; i++) {
+        const categories = Object.keys(productData);
         const category = categories[Math.floor(Math.random() * categories.length)];
+        const categoryProducts = productData[category];
+
+        const brands = Object.keys(categoryProducts);
         const brand = brands[Math.floor(Math.random() * brands.length)];
+        const brandProducts = categoryProducts[brand];
+
+        const productName = brandProducts[Math.floor(Math.random() * brandProducts.length)];
+        const fullName = brand ? `${brand} ${productName}` : productName;
+
+        const descriptions = [
+          `최신 기술이 적용된 프리미엄 제품입니다.`,
+          `편안하고 실용적인 디자인의 인기 상품입니다.`,
+          `고품질 소재로 제작되어 내구성이 뛰어납니다.`,
+          `일상 생활을 더욱 편리하게 만들어주는 필수 아이템입니다.`,
+          `세련된 디자인과 뛰어난 성능을 자랑합니다.`,
+        ];
 
         products.push({
-          name: `${brand} ${category} 상품 ${i + 1}`,
-          description: `${brand}에서 출시한 프리미엄 ${category} 상품입니다. 최고의 품질과 디자인을 자랑합니다.`,
+          name: fullName,
+          description: descriptions[Math.floor(Math.random() * descriptions.length)],
           price: Math.floor(Math.random() * 1000000) + 10000,
           category,
-          brand,
+          brand: brand || category,
           stock: Math.floor(Math.random() * 100) + 1,
-          tags: [category, brand, '인기', '추천'],
+          tags: [category, brand || category, '인기', '추천'].filter(Boolean),
           rating: Math.round((Math.random() * 2 + 3) * 10) / 10,
           reviewCount: Math.floor(Math.random() * 500),
           isActive: true,

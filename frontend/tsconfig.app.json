@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@admin/*": ["src/admin/*"],
+      "@components/*": ["src/admin/components/*"],
+      "@pages/*": ["src/admin/pages/*"],
+      "@services/*": ["src/admin/services/*"],
+      "@hooks/*": ["src/admin/hooks/*"],
+      "@types/*": ["src/admin/types/*"],
+      "@utils/*": ["src/admin/utils/*"],
+      "@theme/*": ["src/admin/theme/*"],
+      "@config/*": ["src/admin/config/*"]
+    },
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}

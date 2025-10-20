@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국어 상품 검색</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 40px;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 18px 24px;
+            font-size: 17px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+
+        .search-btn {
+            padding: 18px 48px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-btn:hover {
+            background: #2563eb;
+            transform: scale(1.02);
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .results-count {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .results-count span {
+            color: #3b82f6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            border: 2px solid #f0f0f0;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: white;
+        }
+
+        .product-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .product-name em {
+            background: #dbeafe;
+            font-style: normal;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #1e40af;
+        }
+
+        .product-brand {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .product-category {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .product-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin: 15px 0 10px;
+        }
+
+        .product-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #999;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .product-rating {
+            color: #ffa726;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-results-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .no-results-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .page-btn {
+            padding: 10px 18px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+
+        .page-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+        }
+
+        .page-btn:disabled:hover {
+            background: white;
+            color: #6b7280;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.2s;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .modal-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .modal-badge.brand {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .modal-badge.category {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .modal-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin: 20px 0;
+        }
+
+        .modal-description {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.8;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .modal-info-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .modal-info-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .modal-info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .modal-tag {
+            background: #e8eaf6;
+            color: #667eea;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            .modal-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-price {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- Simple header without title -->
+        </header>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="검색어를 입력하세요 (예: 삼성 노트북, 무선이어폰)"
+                    autocomplete="off"
+                >
+                <button class="search-btn" onclick="search()">검색</button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="categoryFilter">카테고리</label>
+                    <select id="categoryFilter" onchange="search()">
+                        <option value="">전체</option>
+                        <option value="전자제품">전자제품</option>
+                        <option value="패션">패션</option>
+                        <option value="식품">식품</option>
+                        <option value="생활용품">생활용품</option>
+                        <option value="도서">도서</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="minPrice">최소 가격</label>
+                    <input type="number" id="minPrice" placeholder="0" onchange="search()">
+                </div>
+
+                <div class="filter-group">
+                    <label for="maxPrice">최대 가격</label>
+                    <input type="number" id="maxPrice" placeholder="제한없음" onchange="search()">
+                </div>
+
+                <div class="filter-group">
+                    <label for="sortFilter">정렬</label>
+                    <select id="sortFilter" onchange="search()">
+                        <option value="">관련도순</option>
+                        <option value="price:asc">가격 낮은순</option>
+                        <option value="price:desc">가격 높은순</option>
+                        <option value="rating:desc">평점 높은순</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">검색 결과를 기다리는 중...</div>
+            </div>
+            <div id="resultsContainer">
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <div class="no-results-text">검색어를 입력하고 검색 버튼을 눌러주세요</div>
+                    <p style="color: #999; margin-top: 10px;">한국어 형태소 분석으로 정확한 검색 결과를 제공합니다</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // 같은 서버에서 서빙되므로 상대 경로 사용
+        const API_BASE_URL = '';
+        let currentPage = 1;
+        const pageSize = 12;
+
+        // 페이지 로드 시 전체 상품 로드
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAllProducts();
+
+            // Enter 키로 검색
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    search();
+                }
+            });
+        });
+
+        // 전체 상품 로드
+        async function loadAllProducts() {
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/products/search?pageSize=${pageSize}&page=${currentPage}`);
+
+                if (!response.ok) {
+                    throw new Error('API 요청 실패');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('상품을 불러오는데 실패했습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+            }
+        }
+
+        // 검색 실행
+        async function search(page = 1) {
+            currentPage = page;
+            const searchQuery = document.getElementById('searchInput').value.trim();
+            const category = document.getElementById('categoryFilter').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            // URL 파라미터 생성
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('q', searchQuery);
+            if (category) params.append('category', category);
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            if (sort) params.append('sort', sort);
+            params.append('page', currentPage);
+            params.append('pageSize', pageSize);
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/products/search?${params}`);
+
+                if (!response.ok) {
+                    throw new Error('검색 실패');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('검색에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            }
+        }
+
+        // 결과 표시
+        function displayResults(data) {
+            const { total, items, page } = data;
+
+            // 결과 수 표시
+            document.getElementById('resultsCount').innerHTML =
+                `총 <span>${total.toLocaleString()}</span>개의 상품`;
+
+            const container = document.getElementById('resultsContainer');
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">😢</div>
+                        <div class="no-results-text">검색 결과가 없습니다</div>
+                        <p style="color: #999; margin-top: 10px;">다른 검색어로 시도해보세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 상품 카드 생성
+            const productsHTML = items.map(product => {
+                const name = product._highlight?.name?.[0] || product.name;
+                const brand = product._highlight?.brand?.[0] || product.brand;
+                const description = product._highlight?.description?.[0] || product.description;
+
+                return `
+                    <div class="product-card" onclick='showModal(${JSON.stringify(product)})'>
+                        <div>
+                            <span class="product-brand">${brand}</span>
+                            <span class="product-category">${product.category}</span>
+                        </div>
+                        <div class="product-name">${name}</div>
+                        <div class="product-description">${description}</div>
+                        <div class="product-price">${product.price.toLocaleString()}원</div>
+                        <div class="product-info">
+                            <span class="product-rating">⭐ ${product.rating} (${product.reviewCount})</span>
+                            <span>재고: ${product.stock}개</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 페이지네이션
+            const totalPages = Math.ceil(total / pageSize);
+            const paginationHTML = totalPages > 1 ? `
+                <div class="pagination">
+                    <button class="page-btn" onclick="search(${page - 1})" ${page <= 1 ? 'disabled' : ''}>
+                        이전
+                    </button>
+                    ${Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum = page - 2 + i;
+                        if (pageNum < 1 || pageNum > totalPages) return '';
+                        return `
+                            <button class="page-btn ${pageNum === page ? 'active' : ''}"
+                                    onclick="search(${pageNum})">
+                                ${pageNum}
+                            </button>
+                        `;
+                    }).join('')}
+                    <button class="page-btn" onclick="search(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>
+                        다음
+                    </button>
+                </div>
+            ` : '';
+
+            container.innerHTML = `
+                <div class="product-grid">${productsHTML}</div>
+                ${paginationHTML}
+            `;
+        }
+
+        // 로딩 표시
+        function showLoading() {
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
+                    검색 중입니다...
+                </div>
+            `;
+        }
+
+        // 에러 표시
+        function showError(message) {
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">⚠️</div>
+                    <div class="no-results-text">오류가 발생했습니다</div>
+                    <p style="color: #999; margin-top: 10px;">${message}</p>
+                </div>
+            `;
+        }
+
+        // 모달 표시
+        function showModal(product) {
+            const modal = document.getElementById('productModal');
+            const modalBody = document.getElementById('modalBody');
+
+            const tagsHTML = product.tags?.length > 0
+                ? `<div class="modal-tags">
+                    ${product.tags.map(tag => `<span class="modal-tag">${tag}</span>`).join('')}
+                   </div>`
+                : '';
+
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <h2 class="modal-title">${product.name}</h2>
+                    <div class="modal-badges">
+                        <span class="modal-badge brand">${product.brand}</span>
+                        <span class="modal-badge category">${product.category}</span>
+                    </div>
+                </div>
+
+                <div class="modal-price">${product.price.toLocaleString()}원</div>
+
+                <div class="modal-description">
+                    ${product.description}
+                </div>
+
+                <div class="modal-info-grid">
+                    <div class="modal-info-item">
+                        <div class="modal-info-label">평점</div>
+                        <div class="modal-info-value">⭐ ${product.rating}</div>
+                    </div>
+                    <div class="modal-info-item">
+                        <div class="modal-info-label">리뷰</div>
+                        <div class="modal-info-value">${product.reviewCount}개</div>
+                    </div>
+                    <div class="modal-info-item">
+                        <div class="modal-info-label">재고</div>
+                        <div class="modal-info-value">${product.stock}개</div>
+                    </div>
+                    <div class="modal-info-item">
+                        <div class="modal-info-label">활성 상태</div>
+                        <div class="modal-info-value">${product.isActive ? '판매중' : '품절'}</div>
+                    </div>
+                </div>
+
+                ${tagsHTML}
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('productModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // 모달 배경 클릭 시 닫기
+        document.getElementById('productModal').addEventListener('click', (e) => {
+            if (e.target.id === 'productModal') {
+                closeModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

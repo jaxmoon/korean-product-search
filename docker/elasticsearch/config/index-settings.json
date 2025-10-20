@@ -67,16 +67,10 @@
             "한"
           ]
         },
-        "synonym": {
+        "synonym_filter": {
           "type": "synonym",
-          "synonyms": [
-            "노트북, 랩탑, laptop",
-            "휴대폰, 핸드폰, 스마트폰, 모바일",
-            "티셔츠, 반팔, 티",
-            "청바지, 데님, 진",
-            "운동화, 스니커즈, 신발",
-            "가방, 백, 백팩, 배낭"
-          ]
+          "synonyms": [],
+          "expand": true
         }
       },
       "analyzer": {
@@ -86,8 +80,7 @@
           "filter": [
             "nori_part_of_speech",
             "lowercase",
-            "korean_stop",
-            "synonym"
+            "korean_stop"
           ]
         },
         "nori_search_analyzer": {
@@ -96,6 +89,16 @@
           "filter": [
             "nori_part_of_speech",
             "lowercase"
+          ]
+        },
+        "nori_synonym_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": [
+            "nori_part_of_speech",
+            "lowercase",
+            "synonym_filter",
+            "korean_stop"
           ]
         }
       }
@@ -106,7 +109,7 @@
       "name": {
         "type": "text",
         "analyzer": "nori_analyzer",
-        "search_analyzer": "nori_search_analyzer",
+        "search_analyzer": "nori_synonym_analyzer",
         "fields": {
           "keyword": {
             "type": "keyword",
@@ -121,7 +124,7 @@
       "description": {
         "type": "text",
         "analyzer": "nori_analyzer",
-        "search_analyzer": "nori_search_analyzer"
+        "search_analyzer": "nori_synonym_analyzer"
       },
       "category": {
         "type": "keyword"
@@ -144,7 +147,15 @@
         "type": "integer"
       },
       "brand": {
-        "type": "keyword"
+        "type": "text",
+        "analyzer": "nori_analyzer",
+        "search_analyzer": "nori_synonym_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
       },
       "rating": {
         "type": "float"
