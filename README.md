@@ -238,6 +238,7 @@ npm run test:search
 - [Elasticsearch Nori Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html)
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
+- [AWS 비용 예측 가이드](docs/aws-cost-estimation.md) - 시나리오별 AWS 배포 비용 예측 (개발/테스트, 소규모, 중규모, 대규모)
 
 ## 📄 라이센스
 
