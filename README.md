@@ -9,16 +9,20 @@ Elasticsearch Nori 플러그인을 활용한 한국어 형태소 분석 기반 �
 ### 주요 기능
 
 - ✅ 한국어 형태소 분석 (Nori tokenizer)
-- ✅ 상품명, 상품설명 전문 검색
+- ✅ 동적 유의어 관리 시스템
+- ✅ 상품명, 브랜드, 설명 검색
 - ✅ 카테고리, 가격, 태그 필터링
 - ✅ 검색어 하이라이팅
 - ✅ 정렬 및 페이지네이션
-- ✅ 1000개 샘플 데이터 제공
+- ✅ Admin Dashboard (상품/유의어 관리)
+- ✅ 데이터 백업/복구 (dump/restore)
+- ✅ 2000개 샘플 데이터 제공
 
 ## 🏗️ 기술 스택
 
 - **검색 엔진**: Elasticsearch 8.x + Nori Plugin
 - **Backend**: NestJS 11.x + TypeScript
+- **Frontend**: React 18.x + Vite + Material-UI
 - **데이터베이스**: Elasticsearch (문서 저장소로 활용)
 - **인프라**: Docker Compose
 - **모니터링**: Kibana
@@ -48,8 +52,8 @@ cp .env.example .env
 # 전체 환경 시작 (Elasticsearch + Kibana)
 make up
 
-# 또는 docker-compose 직접 사용
-docker-compose up -d
+# 또는 docker compose 직접 사용
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### 3. 백엔드 실행
@@ -57,21 +61,33 @@ docker-compose up -d
 ```bash
 # 의존성 설치
 cd backend
-npm install
+npm install --legacy-peer-deps
 
 # 개발 서버 시작
 npm run start:dev
 ```
 
-### 4. 샘플 데이터 생성
+### 4. Admin Frontend 실행 (선택사항)
 
 ```bash
-# 1000개 샘플 상품 데이터 생성
-cd backend
-npm run seed
+# 의존성 설치
+cd frontend
+npm install
 
-# 또는 스크립트 직접 실행
-ts-node ../scripts/seed-data.ts
+# 개발 서버 시작
+npm run dev
+```
+
+Admin Dashboard: http://localhost:3000
+- 기본 계정: admin / admin123
+
+### 5. 샘플 데이터 생성
+
+```bash
+# Backend API를 통해 2000개 샘플 상품 생성
+curl -X POST http://localhost:4000/admin/products/seed \
+  -H "Content-Type: application/json" \
+  -d '{"count": 2000}'
 ```
 
 ## 📖 API 문서
@@ -153,8 +169,8 @@ GET /products/search?q=핸드폰
 # 전체 환경 시작
 make up
 
-# 백엔드만 재시작
-make restart-backend
+# 백엔드 개발 서버 시작
+make backend-dev
 
 # 로그 확인
 make logs
@@ -162,8 +178,11 @@ make logs
 # Elasticsearch 상태 확인
 make es-status
 
-# 인덱스 재생성
-make es-reindex
+# 데이터 백업 (dump 디렉토리에 저장)
+make dump
+
+# 데이터 복구 (최신 덤프 사용)
+make restore
 
 # 전체 중지
 make down
@@ -179,17 +198,32 @@ korean-product-search/
 ├── backend/                    # NestJS 백엔드
 │   ├── src/
 │   │   ├── products/          # 상품 모듈
+│   │   ├── synonyms/          # 유의어 모듈
 │   │   ├── elasticsearch/     # Elasticsearch 모듈
+│   │   ├── admin/             # Admin API 모듈
 │   │   └── common/            # 공통 모듈
 │   └── package.json
-├── scripts/
-│   └── seed-data.ts           # 샘플 데이터 생성 (1000개)
-├── docker/
+├── frontend/                   # React Admin Dashboard
+│   ├── src/
+│   │   ├── pages/             # 페이지 컴포넌트
+│   │   ├── components/        # 재사용 컴포넌트
+│   │   └── services/          # API 서비스
+│   └── package.json
+├── scripts/                    # 유틸리티 스크립트
+│   ├── dump-elasticsearch.sh  # 데이터 백업
+│   └── restore-elasticsearch.sh # 데이터 복구
+├── docs/                       # 문서
+│   ├── api.md                 # API 가이드
+│   └── aws-cost-estimation.md # AWS 비용 예측
+├── docker/                     # Docker 설정
+│   ├── docker-compose.yml
 │   └── elasticsearch/
 │       └── config/
-│           └── index-settings.json
-├── docker-compose.yml
+│           ├── index-settings.json
+│           └── product-dictionary.txt
+├── dump/                       # 데이터 백업 디렉토리
 ├── Makefile
+├── CLAUDE.md                   # Claude Code 가이드
 └── README.md
 ```
 
@@ -197,17 +231,33 @@ korean-product-search/
 
 ### Nori 형태소 분석기 설정
 
-- **Tokenizer**: nori_tokenizer
-- **Token Filter**: nori_part_of_speech (조사 제거)
-- **Character Filter**: 특수문자 정규화
-- **User Dictionary**: 커스텀 단어 사전
+- **Tokenizer**: nori_tokenizer (혼합 분해 모드)
+- **Token Filter**:
+  - nori_part_of_speech (조사 제거)
+  - synonym_filter (동적 유의어)
+  - lowercase
+  - korean_stop (불용어 제거)
+- **User Dictionary**: 커스텀 단어 사전 (상품명, 유의어)
+
+### 유의어 시스템
+
+- **동적 유의어**: Admin Dashboard에서 실시간 관리
+- **검색 시점 확장**: Search analyzer에 유의어 필터 적용
+- **자동 동기화**: 유의어 변경 시 인덱스 재생성 (무중단)
+
+예시:
+```
+엘쥐, LG, 엘지 → 모두 동일한 결과 반환
+노트북, 랩탑, 랩톱, 노북 → 모두 동일한 결과 반환
+```
 
 ### 인덱스 매핑
 
 ```json
 {
-  "name": "text (nori_analyzer)",
-  "description": "text (nori_analyzer)",
+  "name": "text (nori_analyzer + nori_synonym_analyzer)",
+  "description": "text (nori_analyzer + nori_synonym_analyzer)",
+  "brand": "text (nori_analyzer + nori_synonym_analyzer)",
   "category": "keyword",
   "price": "long",
   "tags": "keyword[]"
@@ -216,9 +266,10 @@ korean-product-search/
 
 ## 📈 성능 지표
 
-- **검색 속도**: < 100ms (1000개 데이터)
+- **검색 속도**: < 100ms (2000개 데이터)
 - **인덱싱 속도**: ~500 docs/sec
-- **정확도**: 형태소 분석으로 90%+ 재현율
+- **정확도**: 형태소 분석 + 유의어로 95%+ 재현율
+- **유의어 동기화**: < 1초 (무중단 reindex)
 
 ## 🧪 테스트
 

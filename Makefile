@@ -97,4 +97,15 @@ dev-reset: clean up ## Reset entire development environment
 # Quick check
 check: es-status ## Quick health check
 	@echo "\n🔍 Checking backend..."
-	@curl -s http://localhost:3000/health || echo "❌ Backend is not running"
+	@curl -s http://localhost:4000/health || echo "❌ Backend is not running"
+
+# Data backup and restore
+dump: ## Dump Elasticsearch data to ./dump directory
+	@echo "💾 Dumping Elasticsearch data..."
+	@chmod +x scripts/dump-elasticsearch.sh
+	@./scripts/dump-elasticsearch.sh
+
+restore: ## Restore Elasticsearch data from latest dump
+	@echo "📥 Restoring Elasticsearch data..."
+	@chmod +x scripts/restore-elasticsearch.sh
+	@./scripts/restore-elasticsearch.sh
