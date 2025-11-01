@@ -82,6 +82,40 @@
             transform: scale(0.98);
         }
 
+        .synonym-suggestions {
+            margin-top: 12px;
+            margin-bottom: 24px;
+        }
+
+        .synonym-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .synonym-chip {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .synonym-chip:hover {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .synonym-chip:active {
+            transform: translateY(0);
+        }
+
         .filters {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -509,6 +543,12 @@
                 <button class="search-btn" onclick="search()">검색</button>
             </div>
 
+            <div class="synonym-suggestions">
+                <div class="synonym-chips" id="synonymChips">
+                    <!-- 동적으로 로드됨 -->
+                </div>
+            </div>
+
             <div class="filters">
                 <div class="filter-group">
                     <label for="categoryFilter">카테고리</label>
@@ -575,6 +615,7 @@
         // 페이지 로드 시 전체 상품 로드
         window.addEventListener('DOMContentLoaded', () => {
             loadAllProducts();
+            loadSynonymSuggestions();
 
             // Enter 키로 검색
             document.getElementById('searchInput').addEventListener('keypress', (e) => {
@@ -583,6 +624,55 @@
                 }
             });
         });
+
+        // 유의어 제안 로드
+        async function loadSynonymSuggestions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/synonyms`);
+
+                if (!response.ok) {
+                    console.error('유의어 로드 실패');
+                    return;
+                }
+
+                const synonyms = await response.json();
+
+                // 활성화된 유의어만 필터링
+                const activeSynonyms = synonyms.filter(s => s.isActive);
+
+                // 각 유의어 세트에서 랜덤하게 키워드 선택
+                const keywords = [];
+                activeSynonyms.forEach(synonym => {
+                    const allWords = [synonym.word, ...synonym.synonyms];
+                    // 랜덤하게 1-2개 선택
+                    const count = Math.random() > 0.5 ? 2 : 1;
+                    for (let i = 0; i < count && i < allWords.length; i++) {
+                        const randomIndex = Math.floor(Math.random() * allWords.length);
+                        keywords.push(allWords[randomIndex]);
+                        allWords.splice(randomIndex, 1); // 중복 방지
+                    }
+                });
+
+                // 랜덤하게 섞고 10개 선택
+                const shuffled = keywords.sort(() => Math.random() - 0.5);
+                const selected = shuffled.slice(0, 10);
+
+                // HTML 생성
+                const chipsHTML = selected.map(keyword =>
+                    `<span class="synonym-chip" onclick="searchKeyword('${keyword}')">${keyword}</span>`
+                ).join('');
+
+                document.getElementById('synonymChips').innerHTML = chipsHTML;
+            } catch (error) {
+                console.error('Error loading synonyms:', error);
+            }
+        }
+
+        // 키워드로 검색
+        function searchKeyword(keyword) {
+            document.getElementById('searchInput').value = keyword;
+            search(1);
+        }
 
         // 전체 상품 로드
         async function loadAllProducts() {
