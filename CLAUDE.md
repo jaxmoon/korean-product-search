@@ -90,7 +90,7 @@ node -e "require('bcrypt').hash('your-password', 10, (e,h) => console.log(h))"
 ### 3단계: 샘플 데이터 생성
 
 ```bash
-# 백엔드 개발 서버 시작 (포트 4000)
+# 백엔드 개발 서버 시작 (포트 3001)
 npm run start:dev
 
 # 새 터미널에서: 1000개 샘플 상품 생성
@@ -98,7 +98,9 @@ cd backend
 npm run seed
 
 # 또는 API 직접 호출
-curl -X POST http://localhost:3001/products/seed
+curl -X POST http://localhost:3001/admin/products/seed \
+  -H "Content-Type: application/json" \
+  -d '{"count": 1000}'
 ```
 
 ### 4단계: 데이터 백업 (선택사항)
@@ -165,11 +167,16 @@ cd backend && npm run start:dev
 
 ### 데이터 관리
 ```bash
-# 2000개 샘플 상품 데이터 생성
+# 1000개 샘플 상품 데이터 생성
 cd backend && npm run seed
 
-# 또는 API로 생성
-curl -X POST http://localhost:3001/products/seed
+# 또는 API로 특정 개수 생성 (예: 2000개)
+curl -X POST http://localhost:3001/admin/products/seed \
+  -H "Content-Type: application/json" \
+  -d '{"count": 2000}'
+
+# 유의어 동기화 (유의어 변경 후 필수)
+curl -X POST http://localhost:3001/synonyms/sync
 ```
 
 ### 테스트
@@ -206,7 +213,7 @@ make dev-setup        # 전체 개발 환경 초기 설정
 ```
 backend/src/
 ├── app.module.ts                    # 루트 모듈 (ConfigModule 전역 설정)
-├── main.ts                          # 진입점 (포트 4000, CORS, Swagger, ValidationPipe)
+├── main.ts                          # 진입점 (포트 3001, CORS, Swagger, ValidationPipe)
 ├── products/                        # 공개 상품 API
 │   ├── products.module.ts
 │   ├── products.controller.ts       # 검색, CRUD 엔드포인트
@@ -295,6 +302,87 @@ node -e "require('bcrypt').hash('your-password', 10, (e,h) => console.log(h))"
 3. **Error Handling** - 적절한 HTTP 상태 코드와 에러 메시지
 4. **Module Structure** - 기능별 모듈 분리 (products, admin-products 등)
 5. **Global Services** - `ElasticsearchService`는 전역 exports로 제공
+
+## 주요 워크플로우
+
+### 유의어 관리 프로세스
+1. Admin Dashboard (http://localhost:4000) 또는 API로 유의어 추가/수정
+2. `/synonyms/sync` 호출로 Elasticsearch 동기화 (필수)
+3. 자동으로 products 인덱스 재생성 (무중단 reindex)
+4. 검색 시 자동으로 유의어 확장 적용
+
+**중요**: 유의어를 변경한 후에는 반드시 동기화를 실행해야 검색에 반영됩니다.
+
+### 인증 및 CORS
+- Admin API는 JWT 인증 필요 (기본 계정: admin/admin123)
+- 프론트엔드는 Vite 프록시(/api)를 통해 백엔드 호출
+- CORS는 개발 환경에서 localhost:4000, localhost:3001 허용
+- 프록시는 `/api` prefix를 제거하고 백엔드로 전달
+
+### 프론트엔드 개발 (Admin Dashboard)
+```bash
+# 프론트엔드만 실행
+cd frontend
+npm run dev  # http://localhost:4000
+
+# 프론트엔드는 Vite 프록시를 사용하여 백엔드와 통신
+# frontend/src/admin/config/env.ts에서 apiBaseUrl = '/api' 사용
+# 직접 http://localhost:3001 호출 금지
+```
+
+## 트러블슈팅 가이드
+
+### npm install 실패 (의존성 충돌)
+```bash
+# backend 디렉토리에서
+npm install --legacy-peer-deps
+```
+
+### Nori plugin 오류 ("Unknown tokenizer type [nori_tokenizer]")
+```bash
+# Elasticsearch 컨테이너에 Nori plugin 설치
+docker exec korean-product-search-es bin/elasticsearch-plugin install analysis-nori
+
+# 컨테이너 재시작
+docker restart korean-product-search-es
+
+# 또는 전체 재시작
+make down && make up
+```
+
+### 로그인 실패 (404 또는 500 에러)
+1. **백엔드 포트 확인**: 3001 포트에서 실행 중인지 확인
+2. **프론트엔드 포트 확인**: 4000 포트에서 실행 중인지 확인
+3. **CORS 설정 확인**: `backend/src/main.ts`의 allowedOrigins에 'http://localhost:4000' 포함
+4. **Vite 프록시 확인**: `frontend/vite.config.ts`에 rewrite 규칙 포함 여부
+   ```typescript
+   proxy: {
+     '/api': {
+       target: 'http://localhost:3001',
+       changeOrigin: true,
+       rewrite: (path) => path.replace(/^\/api/, ''),
+     },
+   }
+   ```
+5. **env.ts 확인**: `frontend/src/admin/config/env.ts`에서 apiBaseUrl = '/api' 설정
+
+### 유의어 검색 안 됨
+```bash
+# 유의어 동기화 실행
+curl -X POST http://localhost:3001/synonyms/sync
+
+# Elasticsearch에 유의어가 저장되어 있는지 확인
+curl http://localhost:9200/synonyms/_search?pretty
+```
+
+### Elasticsearch 데이터가 없을 때
+```bash
+# 최신 덤프에서 복구
+make restore
+
+# 복구 후 유의어 동기화
+curl -X POST http://localhost:3001/synonyms/sync
+```
 
 ## 참고 자료
 

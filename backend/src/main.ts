@@ -73,8 +73,8 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .setContact('Jax Moon', 'https://github.com/jaxmoon', 'jax@example.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    .addServer('http://localhost:4000', 'Local Development')
-    .addServer('http://localhost:4000/api', 'Local API')
+    .addServer('http://localhost:3001', 'Local Development (Backend)')
+    .addServer('http://localhost:4000/api', 'Local API (via Frontend Proxy)')
     .addBearerAuth(
       {
         type: 'http',
