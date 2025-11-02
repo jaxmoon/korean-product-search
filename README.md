@@ -224,8 +224,7 @@ korean-product-search/
 │   ├── dump-elasticsearch.sh  # 데이터 백업
 │   └── restore-elasticsearch.sh # 데이터 복구
 ├── docs/                       # 문서
-│   ├── api.md                 # API 가이드
-│   └── aws-cost-estimation.md # AWS 비용 예측
+│   └── api.md                 # API 가이드
 ├── docker/                     # Docker 설정
 │   ├── docker-compose.yml
 │   └── elasticsearch/
@@ -300,7 +299,6 @@ npm run test:search
 - [Elasticsearch Nori Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html)
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
-- [AWS 비용 예측 가이드](docs/aws-cost-estimation.md) - 시나리오별 AWS 배포 비용 예측 (개발/테스트, 소규모, 중규모, 대규모)
 
 ## 📄 라이센스
 
