@@ -6,6 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 한국어 형태소 분석 기반 상품 검색 시스템 (Elasticsearch + Nori + NestJS)
 
+## ⚠️ 중요: 서비스 포트
+
+**반드시 아래 포트를 사용해야 합니다:**
+
+| 서비스 | 포트 | 환경변수/설정파일 |
+|--------|------|------------------|
+| **Backend API** | **3001** | `backend/.env` PORT=3001 |
+| **Admin Frontend** | **4000** | `frontend/vite.config.ts` port: 4000 |
+| Elasticsearch | 9200 | docker-compose.yml |
+| Kibana | 5601 | docker-compose.yml |
+
+### 관련 설정 파일
+- `backend/.env`: PORT=3001, ALLOWED_ORIGINS=http://localhost:4000
+- `backend/src/main.ts`: CORS allowedOrigins에 http://localhost:4000 포함
+- `frontend/vite.config.ts`: server.port = 4000, proxy target = http://localhost:3001
+- `frontend/src/admin/config/env.ts`: apiBaseUrl = '/api' (Vite 프록시 사용)
+
 ## 파일 구조 규칙 ⚠️ IMPORTANT
 
 파일을 생성할 때 반드시 아래 디렉토리 규칙을 따라야 합니다:
@@ -81,7 +98,7 @@ cd backend
 npm run seed
 
 # 또는 API 직접 호출
-curl -X POST http://localhost:4000/products/seed
+curl -X POST http://localhost:3001/products/seed
 ```
 
 ### 4단계: 데이터 백업 (선택사항)
@@ -116,15 +133,16 @@ make restore
 ./scripts/restore-elasticsearch.sh 20250101_120000
 
 # 복구 후 유의어 동기화
-curl -X POST http://localhost:4000/synonyms/sync
+curl -X POST http://localhost:3001/synonyms/sync
 ```
 
 ### 환경 확인
 
 모든 설정이 완료되면 아래 URL에 접속하여 확인:
 
-- **백엔드 API**: http://localhost:4000
-- **Swagger 문서**: http://localhost:4000/api
+- **백엔드 API**: http://localhost:3001
+- **Swagger 문서**: http://localhost:3001/api
+- **Admin Dashboard**: http://localhost:4000
 - **Elasticsearch**: http://localhost:9200
 - **Kibana**: http://localhost:5601
 
@@ -141,17 +159,17 @@ cd backend && npm install
 # .env 파일 설정
 cp backend/.env.example backend/.env
 
-# 백엔드 개발 서버 시작 (포트 4000)
+# 백엔드 개발 서버 시작 (포트 3001)
 cd backend && npm run start:dev
 ```
 
 ### 데이터 관리
 ```bash
-# 1000개 샘플 상품 데이터 생성
+# 2000개 샘플 상품 데이터 생성
 cd backend && npm run seed
 
 # 또는 API로 생성
-curl -X POST http://localhost:4000/products/seed
+curl -X POST http://localhost:3001/products/seed
 ```
 
 ### 테스트
@@ -228,7 +246,7 @@ backend/src/
    - 운영 환경: `ALLOWED_ORIGINS` 환경 변수 필수 설정
 
 5. **API 문서**
-   - Swagger UI: http://localhost:4000/api
+   - Swagger UI: http://localhost:3001/api
    - 자동 JWT 인증 버튼 제공
 
 ### Elasticsearch 인덱스 설정
@@ -255,8 +273,9 @@ Nori 분석기 설정:
 백엔드는 `.env` 파일이 필요합니다. `.env.example`을 복사하여 설정:
 
 ```bash
-PORT=4000
+PORT=3001
 NODE_ENV=development
+ALLOWED_ORIGINS=http://localhost:4000
 ELASTICSEARCH_NODE=http://localhost:9200
 ELASTICSEARCH_INDEX=products
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
@@ -279,7 +298,7 @@ node -e "require('bcrypt').hash('your-password', 10, (e,h) => console.log(h))"
 
 ## 참고 자료
 
-- [Swagger API 문서](http://localhost:4000/api) - 백엔드 실행 후 접속
+- [Swagger API 문서](http://localhost:3001/api) - 백엔드 실행 후 접속
 - [상세 API 가이드](docs/api.md)
 - [AWS 비용 예측 가이드](docs/aws-cost-estimation.md)
 - [Elasticsearch Nori Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html)

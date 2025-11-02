@@ -33,6 +33,17 @@ Elasticsearch Nori 플러그인을 활용한 한국어 형태소 분석 기반 �
 - Node.js 20+
 - npm 또는 yarn
 
+## 🌐 서비스 포트
+
+| 서비스 | 포트 | 설명 |
+|--------|------|------|
+| **Backend API** | 3001 | NestJS 백엔드 서버 |
+| **Admin Dashboard** | 4000 | React 어드민 프론트엔드 |
+| Elasticsearch | 9200 | 검색 엔진 |
+| Kibana | 5601 | 모니터링 도구 |
+
+**중요**: 백엔드는 **3001**, 어드민은 **4000** 포트를 사용합니다.
+
 ## 🚀 빠른 시작
 
 ### 1. 환경 설정
@@ -78,14 +89,14 @@ npm install
 npm run dev
 ```
 
-Admin Dashboard: http://localhost:3000
+Admin Dashboard: http://localhost:4000
 - 기본 계정: admin / admin123
 
 ### 5. 샘플 데이터 생성
 
 ```bash
 # Backend API를 통해 2000개 샘플 상품 생성
-curl -X POST http://localhost:4000/admin/products/seed \
+curl -X POST http://localhost:3001/admin/products/seed \
   -H "Content-Type: application/json" \
   -d '{"count": 2000}'
 ```
@@ -96,7 +107,7 @@ curl -X POST http://localhost:4000/admin/products/seed \
 
 애플리케이션 실행 후 브라우저에서 접속:
 ```
-http://localhost:4000/api
+http://localhost:3001/api
 ```
 
 ### 상세 API 가이드
@@ -109,23 +120,23 @@ http://localhost:4000/api
 
 ```bash
 # 기본 검색
-curl "http://localhost:4000/products/search?q=노트북"
+curl "http://localhost:3001/products/search?q=노트북"
 
 # 필터 적용
-curl "http://localhost:4000/products/search?q=스마트폰&category=전자제품&minPrice=300000&maxPrice=1000000"
+curl "http://localhost:3001/products/search?q=스마트폰&category=전자제품&minPrice=300000&maxPrice=1000000"
 
 # 정렬
-curl "http://localhost:4000/products/search?q=이어폰&sort=price:asc"
+curl "http://localhost:3001/products/search?q=이어폰&sort=price:asc"
 
 # 페이지네이션
-curl "http://localhost:4000/products/search?q=책&page=1&pageSize=20"
+curl "http://localhost:3001/products/search?q=책&page=1&pageSize=20"
 ```
 
 #### 상품 CRUD
 
 ```bash
 # 상품 생성
-curl -X POST http://localhost:4000/products \
+curl -X POST http://localhost:3001/products \
   -H "Content-Type: application/json" \
   -d '{
     "name": "갤럭시 S24 울트라",
@@ -137,15 +148,15 @@ curl -X POST http://localhost:4000/products \
   }'
 
 # 상품 조회
-curl "http://localhost:4000/products/{id}"
+curl "http://localhost:3001/products/{id}"
 
 # 상품 수정
-curl -X PUT "http://localhost:4000/products/{id}" \
+curl -X PUT "http://localhost:3001/products/{id}" \
   -H "Content-Type: application/json" \
   -d '{"price": 1400000}'
 
 # 상품 삭제
-curl -X DELETE "http://localhost:4000/products/{id}"
+curl -X DELETE "http://localhost:3001/products/{id}"
 ```
 
 ## 🔍 검색 예제
