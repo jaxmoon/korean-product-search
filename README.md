@@ -296,6 +296,8 @@ npm run test:search
 
 ## 📝 참고 자료
 
+- [API 사용 가이드](docs/api.md) - 모든 엔드포인트 상세 설명
+- [AWS 비용 예측 가이드](docs/aws-cost-estimation.md) - 시나리오별 AWS 배포 비용 예측 (개발/소규모/중규모/대규모)
 - [Elasticsearch Nori Plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html)
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
